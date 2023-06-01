@@ -2798,14 +2798,15 @@ Finally we must have these ***bootcode.bin  config.txt  fixup.dat  start.elf  u-
 
 ## Create Bootable Memory card
 ### Create FAT32 format partition
-Step 1 > First delete existing partition 
-![alt text](./images/step1.png)
-Step 2 > Create FAT32 partition with BOOT lable
-![alt text](./images/step2.png)
-Step 3 > To perform all the operations we selected click on green Right tick on middle top 
-![alt text](./images/step3.png)
+Step 1 > First delete existing partition </br>
+![alt text](./images/step1.png)</br>
+Step 2 > Create FAT32 partition with BOOT lable</br>
+![alt text](./images/step2.png)</br>
+Step 3 > To perform all the operations we selected click on green Right tick on middle top </br>
+![alt text](./images/step3.png)</br>
 Step 4 > Select FAT32 partition > Manage Flags > boot ( Select boot flag )
 
+---
 
 ### Copy all (bootcode.bin,  config.txt,  fixup.dat,  start.elf,  u-boot.bin) the Files in FAT32 partiotion of memory card.
 
@@ -2826,8 +2827,8 @@ In my case RPI is connected to my Serial port COM6
      Communication type to Serial
      Speed to 115200
      Serial line to COM6 (May be different in your case)</pre>
-
-![alt text](./images/rpi_putty.png)
+</br>
+![alt text](./images/rpi_putty.png)</br>
 
 ### Finally we are now connected to U-BOOT on RPI via serial communication
-![alt text](./images/serial_communication.png)
+![alt text](./images/serial_communication.png)</br>
