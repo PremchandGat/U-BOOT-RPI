@@ -6,7 +6,7 @@ In this artical i have shown how we can build [U-BOOT](https://en.wikipedia.org/
 Before we build the u-boot binay first we have to do some setup required to build u-boot
 
 ### First we Create Workspace where we can save nacessory files and folders
-> `prem@Ubuntu:~/Desktop$` ***mkdir U-BOOT-RPI***
+> `prem@Ubuntu:~/Desktop$` ***mkdir U-BOOT-RPI*** </br>
 > `prem@Ubuntu:~/Desktop$` ***cd U-BOOT-RPI/***
 ### Update __apt__ command
 > `prem@Ubuntu:~/Desktop$` ***sudo apt update***
@@ -104,7 +104,7 @@ bc is already the newest version (1.07.1-3build1).
 bc set to manually installed.
 gdisk is already the newest version (1.0.8-4build1).
 gdisk set to manually installed.
-python3 is already the newest version (3.10.6-1~22.04).
+python3 is already the newest version (3.10.6-1\~22.04).
 python3 set to manually installed.
 python3-pkg-resources is already the newest version (59.6.0-1.2ubuntu0.22.04.1).
 python3-pkg-resources set to manually installed.
