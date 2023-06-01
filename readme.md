@@ -2828,6 +2828,7 @@ In my case RPI is connected to my Serial port COM6
      Speed to 115200
      Serial line to COM6 (May be different in your case)</pre>
 </br>
+
 ![alt text](./images/rpi_putty.png)</br>
 
 ### Finally we are now connected to U-BOOT on RPI via serial communication
