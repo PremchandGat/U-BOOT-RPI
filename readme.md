@@ -2,6 +2,69 @@
 In this artical i have shown how we can build [U-BOOT](https://en.wikipedia.org/wiki/Das_U-Boot) image and use on [Raspberry Pi 3 B plus](https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/)
 -----------
 
+## Scope of this Project
+
+### Machine details
+
+<pre>prem@Ubuntu:~$ hostnamectl
+ Static hostname: Ubuntu
+       Icon name: computer-vm
+         Chassis: vm
+      Machine ID: 8bba480631b84619b1e2d355caf7213b
+         Boot ID: 0eaf21639d2f42ecabd27d709be026fa
+  Virtualization: oracle
+Operating System: Ubuntu 22.04.2 LTS              
+          Kernel: Linux 5.19.0-32-generic
+    Architecture: x86-64
+ Hardware Vendor: innotek GmbH
+  Hardware Model: VirtualBox</pre>
+
+### Installed packages details
+Name    | Version |  Architecture | Description
+--- | --- | --- | ---
+ii  bc           |                1.07.1-3build1     |                 amd64   |     GNU bc arbitrary precision calculator language
+ii  bison               |         2:3.8.2+dfsg-1build1      |          amd64     |   YACC-compatible parser generator
+ii  build-essential       |       12.9ubuntu3                         amd64  |      Informational list of build-essential packages
+ii  coccinelle                   1.1.1.deb-1build2                   amd64    |    semantic patching tool for C
+ii  device-tree-compiler   |      1.6.1-1         |                    amd64    |    Device Tree Compiler for Flat Device Trees
+ii  dfu-util         |            0.9-1     |                          amd64    |    Device firmware update (DFU) USB programmer
+ii  efitools             |        1.9.2-1ubuntu3                      amd64    |    Tools to manipulate EFI secure boot keys and signatures
+ii  flex                         2.6.4-8build2                       amd64        fast lexical analyzer generator
+ii  gcc-aarch64-linux-gnu        4:11.2.0-1ubuntu1                   amd64     |   GNU C compiler for the arm64 architecture
+ii  gdisk                        1.0.8-4build1                       amd64        GPT fdisk text-mode partitioning tool
+ii  git                          1:2.34.1-1ubuntu1.9                 amd64        fast, scalable, distributed revision control system
+ii  graphviz                     2.42.2-6                            amd64        rich set of graph drawing tools
+ii  imagemagick                  8:6.9.11.60+dfsg-1.3ubuntu0.22.04.3 amd64        image manipulation programs -- binaries
+ii  libgnutls28-dev:amd64        3.7.3-4ubuntu1.2                    amd64        GNU TLS library - development files
+ii  libguestfs-tools             1:1.46.2-10ubuntu3                  amd64        guest disk image management system - tools
+ii  liblz4-tool                  1.9.3-2build2                       all          Fast LZ compression algorithm library - transitional package
+ii  libncurses-dev:amd64         6.3-2ubuntu0.1                      amd64        developer's libraries for ncurses
+ii  libpython3-dev:amd64         3.10.6-1~22.04                      amd64        header files and a static library for Python (default)
+ii  libsdl2-dev:amd64            2.0.20+dfsg-2ubuntu1.22.04.1        amd64        Simple DirectMedia Layer development files
+ii  libssl-dev:amd64             3.0.2-0ubuntu1.10                   amd64        Secure Sockets Layer toolkit - development files
+ii  lz4                          1.9.3-2build2                       amd64        Fast LZ compression algorithm library - tool
+ii  lzma                         9.22-2.2                            amd64        Compression and decompression in the LZMA format - command line utility
+ii  lzma-alone                   9.22-2.2                            amd64        Compression and decompression in the LZMA format - legacy utility
+ii  openssl                      3.0.2-0ubuntu1.10                   amd64        Secure Sockets Layer toolkit - cryptographic utility
+ii  pkg-config                   0.29.2-1ubuntu3                     amd64        manage compile and link flags for libraries
+ii  python3                      3.10.6-1~22.04                      amd64        interactive high-level object-oriented language (default python3 version)
+ii  python3-asteval              0.9.25-2                            all          minimalistic evaluator of Python 3 expression using ast module
+ii  python3-coverage             6.2+dfsg1-2build1                   amd64        code coverage tool for Python 3
+ii  python3-filelock             3.6.0-1                             all          platform independent file locking module
+ii  python3-pkg-resources        59.6.0-1.2ubuntu0.22.04.1           all          Package Discovery and Resource Access using pkg_resources
+ii  python3-pycryptodome         3.11.0+dfsg1-3build1                amd64        cryptographic Python library (Python 3)
+ii  python3-pyelftools           0.27-1                              all          pure-python3 library for parsing ELF and DWARF
+ii  python3-pytest               6.2.5-1ubuntu2                      all          Simple, powerful testing in Python3
+ii  python3-pytest-xdist         2.5.0-1                             all          xdist plugin for py.test (Python 3)
+ii  python3-sphinx-rtd-theme     1.0.0+dfsg-1                        all          sphinx theme from readthedocs.org (Python 3)
+ii  python3-sphinxcontrib.apidoc 0.3.0-2ubuntu1                      all          Sphinx extension for running 'sphinx-apidoc' on each build - Python 3.x
+ii  python3-subunit              1.4.0-3                             all          unit testing protocol - Python3 bindings to generate and consume streams
+ii  python3-testtools            2.5.0-3ubuntu2                      all          Extensions to the Python unittest library - Python 3.x
+ii  python3-virtualenv           20.13.0+ds-2                        all          Python virtual environment creator
+ii  swig                         4.0.2-1ubuntu1                      all          Generate scripting interfaces to C/C++ code
+ii  uuid-dev:amd64               2.37.2-4ubuntu3                     amd64        Universally Unique ID library - headers and static libraries
+
+
 ## Prerequisites
 Before we build the u-boot binay first we have to do some setup required to build u-boot
 
