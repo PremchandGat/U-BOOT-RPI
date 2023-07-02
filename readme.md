@@ -29,11 +29,11 @@ ii  coccinelle                  | 1.1.1.deb-1build2                 | amd64    |
 ii  device-tree-compiler        | 1.6.1-1                           | amd64    |    Device Tree Compiler for Flat Device Trees
 ii  dfu-util                    | 0.9-1                             | amd64    |    Device firmware update (DFU) USB programmer
 ii  efitools                    | 1.9.2-1ubuntu3                    | amd64    |    Tools to manipulate EFI secure boot keys and signatures
-ii  flex                        | 2.6.4-8build2                     |  amd64        fast lexical analyzer generator
+ii  flex                        | 2.6.4-8build2                     |  amd64    |   fast lexical analyzer generator
 ii  gcc-aarch64-linux-gnu       | 4:11.2.0-1ubuntu1                 |  amd64     |   GNU C compiler for the arm64 architecture
 ii  gdisk                       | 1.0.8-4build1                     |  amd64     |   GPT fdisk text-mode partitioning tool
 ii  git                         | 1:2.34.1-1ubuntu1.9               |  amd64     |  fast, scalable, distributed revision control system
-ii  graphviz                    | 2.42.2-6                             amd64     |   rich set of graph drawing tools
+ii  graphviz                    | 2.42.2-6                          | amd64     |   rich set of graph drawing tools
 ii  imagemagick                 | 8:6.9.11.60+dfsg-1.3ubuntu0.22.04.3| amd64     |  image manipulation programs -- binaries
 ii  libgnutls28-dev:amd64       | 3.7.3-4ubuntu1.2                   | amd64     |   GNU TLS library - development files
 ii  libguestfs-tools            | 1:1.46.2-10ubuntu3                |  amd64     |   guest disk image management system - tools
@@ -2894,5 +2894,377 @@ In my case RPI is connected to my Serial port COM6
 
 ![alt text](./images/rpi_putty.png)</br>
 
-### Finally we are now connected to U-BOOT on RPI via serial communication
+### We are now connected to U-BOOT on RPI via serial communication
 ![alt text](./images/serial_communication.png)</br>
+
+
+## Build dtb and Linux Kernel for RPI
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***git clone https://github.com/raspberrypi/linux.git --depth=1*** 
+    <details>
+           <summary>Command Output</summary>
+           <pre>Cloning into 'linux'...
+remote: Enumerating objects: 84003, done.
+remote: Counting objects: 100% (84003/84003), done.
+remote: Compressing objects: 100% (79499/79499), done.
+Receiving objects: 100% (84003/84003), 232.11 MiB | 406.00 KiB/s, done.
+remote: Total 84003 (delta 7434), reused 23354 (delta 3636), pack-reused 0
+Resolving deltas: 100% (7434/7434), done.
+Updating files: 100% (79315/79315), done.</pre>
+         </details>
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***cd linux***  
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/linux$` ***make ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- bcmrpi3_defconfig*** 
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/linux$` ***make -j 12 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu-*** 
+
+<pre>kernel image location:  arch/arm64/boot/Image
+dtb file location: arch/arm64/boot/dts/broadcom/bcm2837-rpi-3-b-plus.dts</pre>
+#### Copy __arch/arm64/boot/Image__(Rename as kernel.img inside sdcard) and __arch/arm64/boot/dts/broadcom/bcm2837-rpi-3-b-plus.dts__ in FAT32 partiotion of memory card.
+
+## Create rootfs partition in pendrive
+I am using [Gparted](https://gparted.org/) in ubuntu to create partition</br>
+Here are few steps to create rootfs partition</br>
+Step1 > Unmount partition and delete it
+![Unmount](./images/pendrive-1.png)
+Step2 > Create new partition</br>
+FileSystem: ext4</br>
+Label: rootfs</br>
+![Create new partition](./images/pendrive-2.png)
+Step3 > Apply all the operation by clicking on green right button on top 
+![Apply operations](./images/pendrive-3.png)
+
+## Build linux filesystem using BusyBox
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***git clone https://git.busybox.net/busybox/ --dept=1***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***cd busybox***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***make menuconfig***
+
+Under settings select the option __Build Static Binary__<br>
+Under settings update __Cross compiler prefix__ to __aarch64-linux-gnu-__
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***make -j12***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***make install***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***mkdir _install/etc***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***mkdir _install/etc/init.d***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***vi _install/etc/init.d/rcS***
+
+Copy the below script in rcS file
+<pre>
+#!/bin/sh
+
+mount -t proc none /proc
+
+mount -o remount,rw /
+
+mount -t sysfs none /sys
+
+echo /sbin/mdev > /proc/sys/kernel/hotplug
+
+mdev -s
+</pre>
+
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***chmod +x _install/etc/init.d/rcS***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***mkdir _install/proc***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***mkdir _install/sys***
+
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***mkdir _install/dev***
+
+Copy root file system from _install to Pendrive's rootfs partition
+> `prem@Ubuntu:~/Desktop/U-BOOT-RPI/busybox$` ***cp -r _install/\* /media/prem/rootfs***
+
+
+## Boot RPI 
+> `U-Boot>` ***setenv bootargs "8250.nr_uarts=1 root=/dev/sda2 rootwait console=ttyS0,115200n8"***
+
+> `U-Boot>` ***fatload mmc 0 ${kernel_addr_r} kernel.img***
+
+> `U-Boot>` ***fatload mmc 0 ${fdt_addr_r} bcm2837-rpi-3-b-plus.dtb***
+
+> `U-Boot>` ***booti \${kernel_addr_r} - ${fdt_addr_r}***
+
+
+![alt text](./images/linux.png)
+![alt text](./images/linux-booted.png)
+    <details>
+           <summary>RPI Boot logs</summary>
+<pre>
+
+U-Boot 2023.07-rc3-00008-gcb4437e530 (May 31 2023 - 21:52:32 +0530)
+
+DRAM:  948 MiB
+RPI 3 Model B+ (0xa020d3)
+Core:  66 devices, 14 uclasses, devicetree: embed
+MMC:   mmc@7e202000: 0, mmc@7e300000: 1
+Loading Environment from FAT... OK
+In:    serial
+Out:   vidconsole
+Err:   vidconsole
+Net:   No ethernet found.
+starting USB...
+Bus usb@7e980000: USB DWC2
+scanning bus usb@7e980000 for devices...
+Error: lan78xx_eth address not set.
+4 USB Device(s) found
+       scanning usb for storage devices... 1 Storage Device(s) found
+Hit any key to stop autoboot:  0
+U-Boot> setenv bootargs "8250.nr_uarts=1 root=/dev/sda2 rootwait console=ttyS0,115200n8"
+U-Boot> fatload mmc 0 ${kernel_addr_r} kernel.img
+20771328 bytes read in 872 ms (22.7 MiB/s)
+U-Boot> fatload mmc 0 ${fdt_addr_r} bcm2837-rpi-3-b-plus.dtb
+21184 bytes read in 4 ms (5.1 MiB/s)
+U-Boot> booti ${kernel_addr_r} - ${fdt_addr_r}
+Moving Image from 0x80000 to 0x200000, end=16d0000
+## Flattened Device Tree blob at 02600000
+   Booting using the fdt blob at 0x2600000
+Working FDT set to 2600000
+   Using Device Tree in place at 0000000002600000, end 00000000026082bf
+Working FDT set to 2600000
+
+Starting kernel ...
+
+[    0.000000] Booting Linux on physical CPU 0x0000000000 [0x410fd034]
+[    0.000000] Linux version 6.1.31-v8+ (prem@Ubuntu) (aarch64-linux-gnu-gcc (Ubuntu 11.3.0-1ubuntu1~22.04.1) 11.3.0, GNU ld (                                                               GNU Binutils for Ubuntu) 2.38) #1 SMP PREEMPT Sat Jun  3 19:17:42 IST 2023
+[    0.000000] Machine model: Raspberry Pi 3 Model B Plus Rev 1.3
+[    0.000000] efi: UEFI not found.
+[    0.000000] Reserved memory: created CMA memory pool at 0x0000000037400000, size 64 MiB
+[    0.000000] OF: reserved mem: initialized node linux,cma, compatible id shared-dma-pool
+[    0.000000] Zone ranges:
+[    0.000000]   DMA      [mem 0x0000000000000000-0x000000003b3fffff]
+[    0.000000]   DMA32    empty
+[    0.000000]   Normal   empty
+[    0.000000] Movable zone start for each node
+[    0.000000] Early memory node ranges
+[    0.000000]   node   0: [mem 0x0000000000000000-0x000000003b3fffff]
+[    0.000000] Initmem setup node 0 [mem 0x0000000000000000-0x000000003b3fffff]
+[    0.000000] On node 0, zone DMA: 19456 pages in unavailable ranges
+[    0.000000] percpu: Embedded 28 pages/cpu s74152 r8192 d32344 u114688
+[    0.000000] Detected VIPT I-cache on CPU0
+[    0.000000] CPU features: kernel page table isolation forced ON by KASLR
+[    0.000000] CPU features: detected: Kernel page table isolation (KPTI)
+[    0.000000] CPU features: detected: ARM erratum 843419
+[    0.000000] CPU features: detected: ARM erratum 845719
+[    0.000000] alternatives: applying boot alternatives
+[    0.000000] Built 1 zonelists, mobility grouping on.  Total pages: 238896
+[    0.000000] Kernel command line: 8250.nr_uarts=1 root=/dev/sda2 rootwait console=ttyS0,115200n8
+[    0.000000] Dentry cache hash table entries: 131072 (order: 8, 1048576 bytes, linear)
+[    0.000000] Inode-cache hash table entries: 65536 (order: 7, 524288 bytes, linear)
+[    0.000000] mem auto-init: stack:off, heap alloc:off, heap free:off
+[    0.000000] Memory: 863484K/970752K available (11008K kernel code, 1980K rwdata, 3340K rodata, 3840K init, 1002K bss, 41732                                                               K reserved, 65536K cma-reserved)
+[    0.000000] SLUB: HWalign=64, Order=0-3, MinObjects=0, CPUs=4, Nodes=1
+[    0.000000] ftrace: allocating 35530 entries in 139 pages
+[    0.000000] ftrace: allocated 139 pages with 4 groups
+[    0.000000] trace event string verifier disabled
+[    0.000000] rcu: Preemptible hierarchical RCU implementation.
+[    0.000000] rcu:     RCU event tracing is enabled.
+[    0.000000]  Trampoline variant of Tasks RCU enabled.
+[    0.000000]  Rude variant of Tasks RCU enabled.
+[    0.000000]  Tracing variant of Tasks RCU enabled.
+[    0.000000] rcu: RCU calculated value of scheduler-enlistment delay is 100 jiffies.
+[    0.000000] NR_IRQS: 64, nr_irqs: 64, preallocated irqs: 0
+[    0.000000] Root IRQ handler: bcm2836_arm_irqchip_handle_irq
+[    0.000000] rcu: srcu_init: Setting srcu_struct sizes based on contention.
+[    0.000000] arch_timer: cp15 timer(s) running at 19.20MHz (phys).
+[    0.000000] clocksource: arch_sys_counter: mask: 0xffffffffffffff max_cycles: 0x46d987e47, max_idle_ns: 440795202767 ns
+[    0.000001] sched_clock: 56 bits at 19MHz, resolution 52ns, wraps every 4398046511078ns
+[    0.000347] Console: colour dummy device 80x25
+[    0.000431] Calibrating delay loop (skipped), value calculated using timer frequency.. 38.40 BogoMIPS (lpj=19200)
+[    0.000470] pid_max: default: 32768 minimum: 301
+[    0.000660] LSM: Security Framework initializing
+[    0.001005] Mount-cache hash table entries: 2048 (order: 2, 16384 bytes, linear)
+[    0.001048] Mountpoint-cache hash table entries: 2048 (order: 2, 16384 bytes, linear)
+[    0.002952] cgroup: Disabling memory control group subsystem
+[    0.006466] cblist_init_generic: Setting adjustable number of callback queues.
+[    0.006487] cblist_init_generic: Setting shift to 2 and lim to 1.
+[    0.006777] cblist_init_generic: Setting shift to 2 and lim to 1.
+[    0.007080] cblist_init_generic: Setting shift to 2 and lim to 1.
+[    0.007783] rcu: Hierarchical SRCU implementation.
+[    0.007799] rcu:     Max phase no-delay instances is 400.
+[    0.009207] EFI services will not be available.
+[    0.010056] smp: Bringing up secondary CPUs ...
+[    0.011797] Detected VIPT I-cache on CPU1
+[    0.011987] CPU1: Booted secondary processor 0x0000000001 [0x410fd034]
+[    0.013857] Detected VIPT I-cache on CPU2
+[    0.014007] CPU2: Booted secondary processor 0x0000000002 [0x410fd034]
+[    0.015861] Detected VIPT I-cache on CPU3
+[    0.016012] CPU3: Booted secondary processor 0x0000000003 [0x410fd034]
+[    0.016228] smp: Brought up 1 node, 4 CPUs
+[    0.016251] SMP: Total of 4 processors activated.
+[    0.016270] CPU features: detected: 32-bit EL0 Support
+[    0.016305] CPU features: detected: CRC32 instructions
+[    0.016484] CPU: All CPU(s) started at EL2
+[    0.016499] alternatives: applying system-wide alternatives
+[    0.018779] devtmpfs: initialized
+[    0.040030] Enabled cp15_barrier support
+[    0.040080] Enabled setend support
+[    0.040430] clocksource: jiffies: mask: 0xffffffff max_cycles: 0xffffffff, max_idle_ns: 1911260446275000 ns
+[    0.040478] futex hash table entries: 1024 (order: 4, 65536 bytes, linear)
+[    0.043869] pinctrl core: initialized pinctrl subsystem
+[    0.045254] DMI not present or invalid.
+[    0.046317] NET: Registered PF_NETLINK/PF_ROUTE protocol family
+[    0.059114] DMA: preallocated 128 KiB GFP_KERNEL pool for atomic allocations
+[    0.059754] DMA: preallocated 128 KiB GFP_KERNEL|GFP_DMA pool for atomic allocations
+[    0.060187] DMA: preallocated 128 KiB GFP_KERNEL|GFP_DMA32 pool for atomic allocations
+[    0.060365] audit: initializing netlink subsys (disabled)
+[    0.060877] audit: type=2000 audit(0.059:1): state=initialized audit_enabled=0 res=1
+[    0.061782] thermal_sys: Registered thermal governor 'step_wise'
+[    0.061923] cpuidle: using governor menu
+[    0.062188] hw-breakpoint: found 6 breakpoint and 4 watchpoint registers.
+[    0.062491] ASID allocator initialised with 32768 entries
+[    0.062776] Serial: AMBA PL011 UART driver
+[    0.082322] bcm2835-mbox 3f00b880.mailbox: mailbox enabled
+[    0.099986] raspberrypi-firmware soc:firmware: Attached to firmware from 2023-04-25T18:32:05, variant start
+[    0.101003] raspberrypi-firmware soc:firmware: Firmware hash is d7f9c2b4ef7e4a8c0b04374a879ce89d7a948453
+[    0.108059] KASLR enabled
+[    0.154496] bcm2835-dma 3f007000.dma: DMA legacy API manager, dmachans=0x1
+[    0.158675] SCSI subsystem initialized
+[    0.159103] usbcore: registered new interface driver usbfs
+[    0.159206] usbcore: registered new interface driver hub
+[    0.159313] usbcore: registered new device driver usb
+[    0.159969] usb_phy_generic phy: supply vcc not found, using dummy regulator
+[    0.160297] usb_phy_generic phy: dummy supplies not allowed for exclusive requests
+[    0.160770] pps_core: LinuxPPS API ver. 1 registered
+[    0.160788] pps_core: Software ver. 5.3.6 - Copyright 2005-2007 Rodolfo Giometti <giometti@linux.it>
+[    0.160828] PTP clock support registered
+[    0.162974] clocksource: Switched to clocksource arch_sys_counter
+[    0.163864] VFS: Disk quotas dquot_6.6.0
+[    0.164033] VFS: Dquot-cache hash table entries: 512 (order 0, 4096 bytes)
+[    0.164344] FS-Cache: Loaded
+[    0.164771] CacheFiles: Loaded
+[    0.182557] NET: Registered PF_INET protocol family
+[    0.183034] IP idents hash table entries: 16384 (order: 5, 131072 bytes, linear)
+[    0.185411] tcp_listen_portaddr_hash hash table entries: 512 (order: 1, 8192 bytes, linear)
+[    0.185463] Table-perturb hash table entries: 65536 (order: 6, 262144 bytes, linear)
+[    0.185500] TCP established hash table entries: 8192 (order: 4, 65536 bytes, linear)
+[    0.185775] TCP bind hash table entries: 8192 (order: 6, 262144 bytes, linear)
+[    0.186171] TCP: Hash tables configured (established 8192 bind 8192)
+[    0.186455] UDP hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    0.186520] UDP-Lite hash table entries: 512 (order: 2, 16384 bytes, linear)
+[    0.186924] NET: Registered PF_UNIX/PF_LOCAL protocol family
+[    0.188156] RPC: Registered named UNIX socket transport module.
+[    0.188176] RPC: Registered udp transport module.
+[    0.188192] RPC: Registered tcp transport module.
+[    0.188208] RPC: Registered tcp NFSv4.1 backchannel transport module.
+[    0.190478] hw perfevents: enabled with armv8_cortex_a53 PMU driver, 7 counters available
+[    1.964708] Initialise system trusted keyrings
+[    1.965421] workingset: timestamp_bits=46 max_order=18 bucket_order=0
+[    1.978512] zbud: loaded
+[    1.983235] NFS: Registering the id_resolver key type
+[    1.983347] Key type id_resolver registered
+[    1.983365] Key type id_legacy registered
+[    1.983572] nfs4filelayout_init: NFSv4 File Layout Driver Registering...
+[    1.983597] nfs4flexfilelayout_init: NFSv4 Flexfile Layout Driver Registering...
+[    1.985743] Key type asymmetric registered
+[    1.985767] Asymmetric key parser 'x509' registered
+[    1.985890] Block layer SCSI generic (bsg) driver version 0.4 loaded (major 247)
+[    1.985917] io scheduler mq-deadline registered
+[    1.985963] io scheduler kyber registered
+[    1.995866] simple-framebuffer 3eaf0000.framebuffer: framebuffer at 0x3eaf0000, 0x10a800 bytes
+[    1.995901] simple-framebuffer 3eaf0000.framebuffer: format=a8r8g8b8, mode=656x416x32, linelength=2624
+[    1.999093] Console: switching to colour frame buffer device 82x26
+[    2.001622] simple-framebuffer 3eaf0000.framebuffer: fb0: simplefb registered!
+[    2.010730] Serial: 8250/16550 driver, 1 ports, IRQ sharing enabled
+[    2.013102] printk: console [ttyS0] disabled
+[    2.013287] 3f215040.serial: ttyS0 at MMIO 0x3f215040 (irq = 71, base_baud = 31250000) is a 16550
+[    2.884568] printk: console [ttyS0] enabled
+[    2.892317] bcm2835-rng 3f104000.rng: hwrng registered
+[    2.898635] vc-mem: phys_addr:0x00000000 mem_base=0x00000000 mem_size:0x00000000(0 MiB)
+[    2.928644] brd: module loaded
+[    2.946353] loop: module loaded
+[    2.951261] bcm2835-power bcm2835-power: Broadcom BCM2835 power domains driver
+[    2.959748] Loading iSCSI transport class v2.0-870.
+[    2.967204] usbcore: registered new interface driver lan78xx
+[    2.973068] usbcore: registered new interface driver smsc95xx
+[    2.978983] dwc_otg: version 3.00a 10-AUG-2012 (platform bus)
+[    2.986731] dwc2 3f980000.usb: supply vusb_d not found, using dummy regulator
+[    2.994386] dwc2 3f980000.usb: supply vusb_a not found, using dummy regulator
+[    3.053353] dwc2 3f980000.usb: DWC OTG Controller
+[    3.058229] dwc2 3f980000.usb: new USB bus registered, assigned bus number 1
+[    3.065471] dwc2 3f980000.usb: irq 51, io mem 0x3f980000
+[    3.071552] usb usb1: New USB device found, idVendor=1d6b, idProduct=0002, bcdDevice= 6.01
+[    3.079984] usb usb1: New USB device strings: Mfr=3, Product=2, SerialNumber=1
+[    3.087352] usb usb1: Product: DWC OTG Controller
+[    3.092161] usb usb1: Manufacturer: Linux 6.1.31-v8+ dwc2_hsotg
+[    3.098207] usb usb1: SerialNumber: 3f980000.usb
+[    3.104074] hub 1-0:1.0: USB hub found
+[    3.108016] hub 1-0:1.0: 1 port detected
+[    3.113874] usbcore: registered new interface driver usb-storage
+[    3.124240] bcm2835-wdt bcm2835-wdt: Broadcom BCM2835 watchdog timer
+[    3.137552] sdhci: Secure Digital Host Controller Interface driver
+[    3.143871] sdhci: Copyright(c) Pierre Ossman
+[    3.150088] sdhci-pltfm: SDHCI platform and OF driver helper
+[    3.159710] ledtrig-cpu: registered to indicate activity on CPUs
+[    3.166444] hid: raw HID events driver (C) Jiri Kosina
+[    3.171986] usbcore: registered new interface driver usbhid
+[    3.177676] usbhid: USB HID core driver
+[    3.190329] Initializing XFRM netlink socket
+[    3.194797] NET: Registered PF_PACKET protocol family
+[    3.200142] Key type dns_resolver registered
+[    3.206482] registered taskstats version 1
+[    3.210780] Loading compiled-in X.509 certificates
+[    3.217254] Key type .fscrypt registered
+[    3.221275] Key type fscrypt-provisioning registered
+[    3.251831] 3f201000.serial: ttyAMA0 at MMIO 0x3f201000 (irq = 99, base_baud = 0) is a PL011 rev2
+[    3.261369] serial serial0: tty port ttyAMA0 registered
+[    3.275265] of_cfs_init
+[    3.278191] of_cfs_init: OK
+[    3.283253] Waiting for root device /dev/sda2...
+[    3.392020] usb 1-1: new high-speed USB device number 2 using dwc2
+[    3.576395] usb 1-1: New USB device found, idVendor=0424, idProduct=2514, bcdDevice= b.b3
+[    3.584754] usb 1-1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+[    3.593204] hub 1-1:1.0: USB hub found
+[    3.597163] hub 1-1:1.0: 4 ports detected
+[    3.886018] usb 1-1.1: new high-speed USB device number 3 using dwc2
+[    3.980515] usb 1-1.1: New USB device found, idVendor=0424, idProduct=2514, bcdDevice= b.b3
+[    3.989062] usb 1-1.1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+[    3.997674] hub 1-1.1:1.0: USB hub found
+[    4.001887] hub 1-1.1:1.0: 3 ports detected
+[    4.084016] usb 1-1.3: new high-speed USB device number 4 using dwc2
+[    4.181401] usb 1-1.3: New USB device found, idVendor=346d, idProduct=5678, bcdDevice= 2.00
+[    4.189966] usb 1-1.3: New USB device strings: Mfr=1, Product=2, SerialNumber=3
+[    4.197435] usb 1-1.3: Product: Disk 2.0
+[    4.201461] usb 1-1.3: Manufacturer: USB
+[    4.205487] usb 1-1.3: SerialNumber: 0475701240766060959
+[    4.212037] usb-storage 1-1.3:1.0: USB Mass Storage device detected
+[    4.219739] scsi host0: usb-storage 1-1.3:1.0
+[    4.782020] usb 1-1.1.1: new high-speed USB device number 5 using dwc2
+[    4.877772] usb 1-1.1.1: New USB device found, idVendor=0424, idProduct=7800, bcdDevice= 3.00
+[    4.886495] usb 1-1.1.1: New USB device strings: Mfr=0, Product=0, SerialNumber=0
+[    5.161266] lan78xx 1-1.1.1:1.0 (unnamed net_device) (uninitialized): No External EEPROM. Setting MAC Speed
+[    5.183372] lan78xx 1-1.1.1:1.0 (unnamed net_device) (uninitialized): int urb period 64
+[    5.283110] scsi 0:0:0:0: Direct-Access     VendorCo ProductCode      2.00 PQ: 0 ANSI: 4
+[    5.293454] sd 0:0:0:0: [sda] 122880000 512-byte logical blocks: (62.9 GB/58.6 GiB)
+[    5.301810] sd 0:0:0:0: [sda] Write Protect is off
+[    5.307313] sd 0:0:0:0: [sda] No Caching mode page found
+[    5.312783] sd 0:0:0:0: [sda] Assuming drive cache: write through
+[    5.326840]  sda: sda1 sda2
+[    5.331208] sd 0:0:0:0: [sda] Attached SCSI removable disk
+[    5.365499] EXT4-fs (sda2): INFO: recovery required on readonly filesystem
+[    5.372583] EXT4-fs (sda2): write access will be enabled during recovery
+[    5.416118] EXT4-fs (sda2): recovery complete
+[    5.425277] EXT4-fs (sda2): mounted filesystem with ordered data mode. Quota mode: none.
+[    5.433650] VFS: Mounted root (ext4 filesystem) readonly on device 8:2.
+[    5.444266] devtmpfs: mounted
+[    5.459060] Freeing unused kernel memory: 3840K
+[    5.463910] Run /sbin/init as init process
+[    5.486017] random: crng init done
+[    5.604290] EXT4-fs (sda2): re-mounted. Quota mode: none.
+
+Please press Enter to activate this console.
+~ # ls
+bin         etc         lost+found  sbin        usr
+dev         linuxrc     proc        sys
+
+</pre>
+   </details>
+
+
+# Useful links
+1. [U-Boot on beagleboard](https://www.beagleboard.org/blog/2022-06-06-using-the-u-boot-extension-board-manager-beaglebone-boards-example#%253A~%253Atext%253DConfiguring%2520U-Boot%2520and%2520using%2520the%2520%25E2%2580%259Cextension%25E2%2580%259D%2520command%2520Now%252Cserial%2520line%252C%2520you%2520should%2520see%2520U-Boot%25202022.04%2520starting.)
