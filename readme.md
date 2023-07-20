@@ -2903,7 +2903,7 @@ In my case RPI is connected to my Serial port COM6
 ### We are now connected to U-BOOT on RPI via serial communication
 ![alt text](./images/serial_communication.png)</br>
 
-# Building and using Cutom Linux on rpi 3B+
+# Part-2 Building and using Cutom Linux on rpi 3B+
 
 ## Build dtb and Linux Kernel for RPI
 > `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***git clone https://github.com/raspberrypi/linux.git --depth=1*** 
@@ -3272,6 +3272,7 @@ dev         linuxrc     proc        sys
 </pre>
    </details>
 
+In summary, the custom Linux distribution, leveraging BusyBox and U-Boot on the Raspberry Pi 3B+, offers a compact and versatile solution for embedded systems and IoT projects. Its minimal footprint optimizes resources, making it an invaluable choice for resource-constrained devices. Through ongoing maintenance and updates, developers can unlock the full potential of this tailored and efficient operating system.
 
 # Useful links
 1. [U-Boot on beagleboard](https://www.beagleboard.org/blog/2022-06-06-using-the-u-boot-extension-board-manager-beaglebone-boards-example#%253A~%253Atext%253DConfiguring%2520U-Boot%2520and%2520using%2520the%2520%25E2%2580%259Cextension%25E2%2580%259D%2520command%2520Now%252Cserial%2520line%252C%2520you%2520should%2520see%2520U-Boot%25202022.04%2520starting.)
