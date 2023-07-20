@@ -3276,3 +3276,4 @@ In summary, the custom Linux distribution, leveraging BusyBox and U-Boot on the 
 
 # Useful links
 1. [U-Boot on beagleboard](https://www.beagleboard.org/blog/2022-06-06-using-the-u-boot-extension-board-manager-beaglebone-boards-example#%253A~%253Atext%253DConfiguring%2520U-Boot%2520and%2520using%2520the%2520%25E2%2580%259Cextension%25E2%2580%259D%2520command%2520Now%252Cserial%2520line%252C%2520you%2520should%2520see%2520U-Boot%25202022.04%2520starting.)
+2. [Installing U-Boot to the STM32F7 Discovery Board](https://www.emcraft.com/stm32f7-discovery-board/installing-uboot-to-stm32f7-discovery-board#:~:text=Connect%20a%20USB%20type%20A%20to%20Mini-B%20cable,the%20Windows%20PC%2C%20start%20the%20ST%20LINK%20Utility)
