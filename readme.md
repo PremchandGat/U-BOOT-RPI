@@ -1,8 +1,9 @@
 # Custom Linux built using BusyBox and booted using U-BOOT bootloader on RPI 3B+ #
 This artical containes 2 main parts
   1. Building and using U-BOOT on rpi 3B+
-  2. Building and using Cutom Linux on rpi3B+
-In this artical i have shown how we can build [U-BOOT](https://en.wikipedia.org/wiki/Das_U-Boot) image and use on [Raspberry Pi 3 B plus](https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/)
+  2. Building and using Cutom Linux on rpi 3B+
+
+In this artical i have shown how we can build Custom linux ([BusyBox](https://www.busybox.net/)), [U-BOOT](https://en.wikipedia.org/wiki/Das_U-Boot) image and use on [Raspberry Pi 3 B plus](https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/)
 -----------
 
 ## Scope of this Project
@@ -69,7 +70,7 @@ ii  uuid-dev:amd64              | 2.37.2-4ubuntu3                  |   amd64    
 
 
 ## Prerequisites
-Before we build the u-boot binay first we have to do some setup required to build u-boot
+Before we begin there are few packages we need to install in our linux host system and create workspace where we can save all the files required to complete this artical
 
 ### First we Create Workspace where we can save nacessory files and folders
 > `prem@Ubuntu:~/Desktop$` ***mkdir U-BOOT-RPI*** </br>
@@ -135,6 +136,8 @@ Reading state information... Done
 196 packages can be upgraded. Run 'apt list --upgradable' to see them.
 </pre>
 </details>
+
+# Part-1 Building U-BOOT and using on RPI 3B+
 
 ### Clone __U-BOOT__ source code using git command
 > `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***git clone https://github.com/u-boot/u-boot.git***
@@ -2900,6 +2903,7 @@ In my case RPI is connected to my Serial port COM6
 ### We are now connected to U-BOOT on RPI via serial communication
 ![alt text](./images/serial_communication.png)</br>
 
+# Building and using Cutom Linux on rpi 3B+
 
 ## Build dtb and Linux Kernel for RPI
 > `prem@Ubuntu:~/Desktop/U-BOOT-RPI$` ***git clone https://github.com/raspberrypi/linux.git --depth=1*** 
