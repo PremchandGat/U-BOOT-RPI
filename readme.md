@@ -1,4 +1,7 @@
-# U-BOOT on RPI 3B+ #
+# Custom Linux built using BusyBox and booted using U-BOOT bootloader on RPI 3B+ #
+This artical containes 2 main parts
+  1. Building and using U-BOOT on rpi 3B+
+  2. Building and using Cutom Linux on rpi3B+
 In this artical i have shown how we can build [U-BOOT](https://en.wikipedia.org/wiki/Das_U-Boot) image and use on [Raspberry Pi 3 B plus](https://www.raspberrypi.com/products/raspberry-pi-3-model-b-plus/)
 -----------
 
